@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>หน้าขายยา ร้านยาจำลอง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* โทนมืดและปุ่มแคปซูล ปรับจาก DESIGN.md ให้เหมาะกับตัวอักษรไทยและงานเคาน์เตอร์ยา */
+  :root {
+    --bg: #121212; --card: #181818; --card2: #1f1f1f; --line: #2a2a2a;
+    --text: #ffffff; --muted: #b3b3b3;
+    --green: #1ed760; --orange: #ffa42b; --red: #f3727f; --gray: #7c7c7c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 'Noto Sans Thai', system-ui, sans-serif; }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap;
+           gap: 8px 16px; align-items: center; justify-content: space-between; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); background: var(--card2); border-radius: 999px; padding: 4px 14px; font-size: 15px; color: var(--muted); }
+  .chip.ok { color: var(--green); border-color: var(--green); }
+  .chip.bad { color: var(--orange); border-color: var(--orange); }
+  #banner { display: none; margin: 16px 24px 0; padding: 12px 16px; border-radius: 12px;
+            background: #3a2a0a; border: 1px solid var(--orange); color: var(--orange); }
+  #banner.show { display: block; }
+  main { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; padding: 20px 24px 48px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border-radius: 16px; padding: 18px; box-shadow: rgba(0,0,0,.5) 0 8px 24px; }
+  label { display: block; font-weight: 600; margin: 12px 0 4px; }
+  input, select { width: 100%; font: inherit; color: var(--text); background: var(--card2);
+          border: 1px solid var(--line); border-radius: 999px; padding: 10px 18px; min-height: 48px; }
+  input:focus, button:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+  .hint { color: var(--muted); font-size: 15px; margin: 4px 0 0; }
+  .list { margin-top: 12px; max-height: 520px; overflow: auto; border-top: 1px solid var(--line); }
+  .item { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; width: 100%; text-align: left;
+          font: inherit; color: var(--text); background: transparent; border: 0; border-bottom: 1px solid var(--line);
+          padding: 12px 8px; cursor: pointer; min-height: 56px; }
+  .item:hover { background: var(--card2); }
+  .item[aria-pressed="true"] { background: #14301f; box-shadow: inset 4px 0 0 var(--green); }
+  .item .nm { font-weight: 600; }
+  .item .sub { color: var(--muted); font-size: 15px; }
+  .item .qty { text-align: right; font-weight: 700; font-size: 17px; }
+  .badge { display: inline-block; font-size: 14px; border-radius: 999px; padding: 0 10px; border: 1px solid; margin-left: 6px; white-space: nowrap; }
+  .badge.low { color: var(--orange); border-color: var(--orange); }
+  .sel { background: var(--card2); border-radius: 12px; padding: 12px 14px; margin-bottom: 4px; }
+  .sel .big { font-size: 28px; font-weight: 700; color: var(--green); }
+  button.primary { width: 100%; margin-top: 18px; min-height: 56px; font: inherit; font-weight: 700; font-size: 18px;
+          background: var(--green); color: #000; border: 0; border-radius: 999px; cursor: pointer; }
+  button.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .msg { display: none; margin-top: 16px; padding: 14px 16px; border-radius: 12px; border: 1px solid; }
+  .msg.show { display: block; }
+  .msg.ok { color: var(--green); border-color: var(--green); background: #0f2a18; }
+  .msg.err { color: var(--red); border-color: var(--red); background: #2d1519; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 16px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 15px; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--card2); }
+  .foot { color: var(--muted); font-size: 15px; padding: 0 24px 32px; }
+  .empty { color: var(--muted); padding: 16px 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>หน้าขายยา · ร้านยาจำลอง</h1>
+  <div class="chips">
+    <span class="chip" id="asof">วันอ้างอิง: –</span>
+    <span class="chip" id="source">กำลังโหลด…</span>
+  </div>
+</header>
+<div id="banner" role="alert"></div>
+
+<main>
+  <section class="panel" aria-labelledby="h-list">
+    <h2 id="h-list">เลือกยา <span class="hint" id="count"></span></h2>
+    <label for="q" style="margin-top:0">ค้นหา (รหัสยาหรือชื่อ)</label>
+    <input id="q" type="search" placeholder="เช่น AMOX หรือ amoxicillin" autocomplete="off">
+    <p class="hint">แสดงเฉพาะยาที่ใช้งานอยู่และมียอดใช้ได้ ล็อตที่หมดอายุ กักไว้ หรือตัดจำหน่ายแล้วไม่นับ</p>
+    <div class="list" id="list"></div>
+  </section>
+
+  <div>
+    <section class="panel" aria-labelledby="h-sale">
+      <h2 id="h-sale">บันทึกการจ่ายยา</h2>
+      <div class="sel" id="sel"><span class="hint">ยังไม่ได้เลือกยา เลือกจากรายการด้านซ้าย</span></div>
+      <label for="qty">จำนวนที่จ่าย</label>
+      <input id="qty" type="number" inputmode="numeric" min="1" step="1" placeholder="จำนวนเต็ม ตั้งแต่ 1 ขึ้นไป">
+      <label for="pt">รหัสผู้ป่วย</label>
+      <input id="pt" type="text" placeholder="เช่น PT-0001 (รหัสแฝงเท่านั้น)" autocomplete="off">
+      <label for="rx">รหัสเภสัชกร</label>
+      <input id="rx" type="text" placeholder="เช่น RX-01" autocomplete="off">
+      <p class="hint">ข้อมูลจำลอง ห้ามใส่ชื่อผู้ป่วยจริง</p>
+      <button class="primary" id="go" type="button" disabled>จ่ายยา</button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" style="margin-top:20px" aria-labelledby="h-recent">
+      <h2 id="h-recent">รายการจ่ายล่าสุด</h2>
+      <table>
+        <thead><tr><th>เลขที่</th><th>ยา</th><th>ล็อต</th><th class="n">จำนวน</th><th>ประเภท</th></tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+    </section>
+  </div>
+</main>
+<p class="foot">ข้อมูลทั้งหมดเป็นข้อมูลจำลอง ระบบนี้ยังไม่มีการยืนยันตัวตน ระบบจริงต้องมีการเข้าสู่ระบบและสิทธิ์ของเภสัชกร</p>
+
+<script>
+'use strict';
+// ---------- สถานะของหน้า ----------
+let drugs = [];          // ยาที่ขายได้ พร้อมยอดใช้ได้ (คำนวณเพื่อแสดงผลเท่านั้น การตัดสินใจจริงอยู่ที่ฐานข้อมูล)
+let recent = [];         // รายการจ่ายล่าสุด
+let selected = null;     // sku ที่เลือก
+let useBackup = false;   // true เมื่อใช้ไฟล์สำรอง จะปิดปุ่มขาย
+let busy = false;
+
+const $ = id => document.getElementById(id);
+const TYPE_TH = { dispense: 'จ่าย', return: 'คืน', void: 'ยกเลิก' };
+
+// สร้าง element ด้วย textContent เสมอ (ไม่แทรก HTML ดิบ) กับข้อมูลที่มาจากภายนอก
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// ---------- โหลดข้อมูล ----------
+// 1) เรียก /api/data ก่อน  2) ถ้าล้มเหลวอ่านไฟล์สำรอง (drugs.json ฯลฯ) และปิดปุ่มขาย
+async function getJson(url) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 8000);                 // หมดเวลา 8 วินาที
+  try {
+    const r = await fetch(url, { signal: ctl.signal, cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+async function load() {
+  let d, backup = false;
+  try {
+    d = await getJson('/api/data');
+    if (!d || !d.drugs || !d.stock || !d.dispense_log) throw new Error('โครงสร้างข้อมูลไม่ครบ');
+  } catch (e) {
+    try {
+      const [dr, st, dl] = await Promise.all([getJson('drugs.json'), getJson('stock.json'), getJson('dispense-log.json')]);
+      d = { drugs: dr, stock: st, dispense_log: dl }; backup = true;
+    } catch (e2) { showFatal('โหลดข้อมูลไม่ได้ ตรวจการเชื่อมต่อแล้วกดโหลดใหม่'); return; }
+  }
+  useBackup = backup;
+  const asOf = (d.stock.meta && d.stock.meta.as_of) || (d.drugs.meta && d.drugs.meta.as_of) || '';
+  $('asof').textContent = 'วันอ้างอิง: ' + (asOf || 'ไม่ทราบ');
+  const src = $('source');
+  src.className = 'chip ' + (backup ? 'bad' : 'ok');
+  src.textContent = backup ? 'ข้อมูลสำรองจากไฟล์' : 'ข้อมูลจากฐานข้อมูล';
+  const b = $('banner');
+  b.className = backup ? 'show' : '';
+  b.textContent = backup ? 'กำลังแสดงข้อมูลสำรองจากไฟล์ ไม่ใช่ข้อมูลจากฐานข้อมูล ปิดปุ่มจ่ายยาไว้จนกว่าจะเชื่อมฐานข้อมูลได้' : '';
+
+  // ยอดใช้ได้ต่อ sku: ล็อตที่ใช้ได้ (ไม่มี status ในไฟล์สำรองเก่า ให้ถือว่า active) ยังไม่หมดอายุ และมีของ
+  const usable = {};
+  for (const s of d.stock.items) {
+    const okStatus = s.status === undefined || s.status === 'active';
+    if (okStatus && s.expiry && s.expiry >= asOf && s.qty_on_hand > 0) usable[s.sku] = (usable[s.sku] || 0) + s.qty_on_hand;
+  }
+  const inactive = new Set((d.catalog && d.catalog.items ? d.catalog.items : []).filter(x => x.is_active === false).map(x => x.sku));
+  drugs = d.drugs.items
+    .filter(x => !inactive.has(x.sku) && usable[x.sku] > 0)
+    .map(x => ({ ...x, usable: usable[x.sku] }))
+    .sort((a, b) => a.sku.localeCompare(b.sku));
+  recent = d.dispense_log.items.slice().sort((a, b) => b.dispense_id.localeCompare(a.dispense_id)).slice(0, 8);
+  if (selected && !drugs.some(x => x.sku === selected)) selected = null;   // ยาที่เลือกไว้ไม่มีของแล้ว
+  renderList(); renderSel(); renderRecent(); updateButton();
+}
+
+function showFatal(text) {
+  const b = $('banner'); b.className = 'show'; b.textContent = text;
+  $('source').className = 'chip bad'; $('source').textContent = 'โหลดไม่ได้';
+  const btn = el('button', 'item', 'โหลดใหม่'); btn.type = 'button'; btn.onclick = () => load();
+  $('list').replaceChildren(btn);
+}
+
+// ---------- แสดงผล ----------
+function renderList() {
+  const q = $('q').value.trim().toLowerCase();
+  const rows = drugs.filter(x => !q || x.sku.toLowerCase().includes(q) || x.generic_name.toLowerCase().includes(q));
+  $('count').textContent = '(' + rows.length + ' รายการ)';
+  const box = $('list');
+  if (!rows.length) { box.replaceChildren(el('div', 'empty', 'ไม่พบยาที่ตรงกับคำค้น')); return; }
+  box.replaceChildren(...rows.map(x => {
+    const b = el('button', 'item'); b.type = 'button';
+    b.setAttribute('aria-pressed', String(x.sku === selected));
+    const left = el('div');
+    const nm = el('div', 'nm', x.sku + ' · ' + x.generic_name + ' ' + x.strength);
+    if (x.usable < x.reorder_level) nm.appendChild(el('span', 'badge low', 'ต่ำกว่าจุดสั่งซื้อ'));
+    left.append(nm, el('div', 'sub', x.dosage_form + ' · ' + x.category));
+    const right = el('div', 'qty', x.usable.toLocaleString('en-US'));
+    right.appendChild(el('div', 'sub', x.unit));
+    b.append(left, right);
+    b.onclick = () => { selected = x.sku; hideMsg(); renderList(); renderSel(); updateButton(); $('qty').focus(); };
+    return b;
+  }));
+}
+
+function renderSel() {
+  const box = $('sel'); const x = drugs.find(d => d.sku === selected);
+  if (!x) { box.replaceChildren(el('span', 'hint', 'ยังไม่ได้เลือกยา เลือกจากรายการด้านซ้าย')); return; }
+  box.replaceChildren(
+    el('div', '', x.sku + ' · ' + x.generic_name + ' ' + x.strength + ' (' + x.dosage_form + ')'),
+    el('div', 'hint', 'ยอดใช้ได้รวม'),
+    el('div', 'big', x.usable.toLocaleString('en-US') + ' ' + x.unit));
+}
+
+function renderRecent() {
+  $('recent').replaceChildren(...recent.map(r => {
+    const tr = el('tr');
+    tr.append(el('td', '', r.dispense_id), el('td', '', r.sku), el('td', '', r.lot),
+              el('td', 'n', String(r.qty)), el('td', '', TYPE_TH[r.type] || r.type || 'จ่าย'));
+    return tr;
+  }));
+}
+
+function showMsg(kind, nodes) { const m = $('msg'); m.className = 'msg show ' + kind; m.replaceChildren(...nodes); }
+function hideMsg() { $('msg').className = 'msg'; }
+function updateButton() { $('go').disabled = busy || useBackup || !selected; }
+
+// ---------- ส่งคำขอขาย ----------
+// หน้านี้ไม่เลือกล็อตและไม่คำนวณยอดเอง: ส่ง {sku, qty, patient_code, pharmacist_code} ไป /api/dispense
+// แล้วแสดงตามที่เซิร์ฟเวอร์ตอบ (ฟังก์ชัน sell_drug ในฐานข้อมูลเป็นผู้ตัดสิน)
+async function submit() {
+  hideMsg();
+  const qtyRaw = $('qty').value.trim();
+  const pt = $('pt').value.trim(), rx = $('rx').value.trim();
+  // ตรวจเบื้องต้นเพื่อบอกผู้ใช้ทันที (ไม่ตรวจเกินยอดใช้ได้ ให้เซิร์ฟเวอร์เป็นผู้ตอบ)
+  if (!/^\d+$/.test(qtyRaw) || Number(qtyRaw) < 1) return showMsg('err', [el('div', '', 'จำนวนต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป')]);
+  if (!pt) return showMsg('err', [el('div', '', 'กรอกรหัสผู้ป่วยก่อน')]);
+  if (!rx) return showMsg('err', [el('div', '', 'กรอกรหัสเภสัชกรก่อน')]);
+  busy = true; updateButton(); $('go').textContent = 'กำลังบันทึก…';
+  try {
+    const r = await fetch('/api/dispense', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sku: selected, qty: Number(qtyRaw), patient_code: pt, pharmacist_code: rx }),
+    });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.ok) {
+      const t = el('table'); const hd = el('tr');
+      ['เลขที่', 'ล็อต', 'จำนวน'].forEach(h => hd.appendChild(el('th', '', h))); t.appendChild(hd);
+      for (const ln of j.lines) {
+        const tr = el('tr'); tr.append(el('td', '', ln.dispense_id), el('td', '', ln.lot), el('td', 'n', String(ln.qty))); t.appendChild(tr);
+      }
+      showMsg('ok', [el('strong', '', 'จ่ายแล้ว'),
+        el('div', '', 'ยอดใช้ได้ ' + j.usable_before + ' → ' + j.usable_after), t]);
+      $('qty').value = ''; $('pt').value = '';
+      try { sessionStorage.setItem('pos_rx', rx); } catch (e) {}
+      await load();                                            // ดึงยอดใหม่ ไม่ต้องรีเฟรชหน้า
+    } else {
+      showMsg('err', [el('div', '', (j && j.message) || 'ระบบตอบผิดปกติ ลองใหม่อีกครั้ง')]);
+    }
+  } catch (e) {
+    showMsg('err', [el('div', '', 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง')]);
+  } finally {
+    busy = false; $('go').textContent = 'จ่ายยา'; updateButton();
+  }
+}
+
+$('q').addEventListener('input', renderList);
+$('go').addEventListener('click', submit);
+try { $('rx').value = sessionStorage.getItem('pos_rx') || ''; } catch (e) {}
+load();
+</script>
+</body>
+</html>

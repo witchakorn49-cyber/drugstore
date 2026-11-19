@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบร้านยาจำลอง · Workshop สุขภาพดิจิทัล</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#121212; --card:#181818; --card2:#1f1f1f; --line:#2a2a2a; --text:#fff; --muted:#b3b3b3; --green:#1ed760; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.6 'Noto Sans Thai', system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:32px 16px 48px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .note { border:1px solid var(--line); background:var(--card2); border-radius:12px; padding:10px 16px; color:var(--muted); margin-bottom:24px; }
+  ul { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+  /* ปุ่มใหญ่กดง่ายบนมือถือและแท็บเล็ต */
+  a.link { display:block; background:var(--card); border-radius:16px; padding:16px 20px; min-height:72px; color:var(--text); text-decoration:none;
+           box-shadow:rgba(0,0,0,.5) 0 8px 24px; border:1px solid transparent; }
+  a.link:hover { border-color:var(--green); }
+  a.link:focus-visible { outline:3px solid var(--green); outline-offset:2px; }
+  .t { font-weight:700; font-size:18px; }
+  .d { color:var(--muted); font-size:15px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ระบบร้านยาจำลอง</h1>
+  <p class="sub">Workshop การใช้ AI พัฒนาระบบงานสุขภาพ · สาขาวิชาสุขภาพดิจิทัล คณะเภสัชศาสตร์</p>
+  <p class="note">ข้อมูลทั้งหมดเป็นข้อมูลจำลอง ห้ามใส่ชื่อผู้ป่วยจริงหรือข้อมูลสุขภาพจริง</p>
+  <ul id="links"></ul>
+</main>
+<script>
+// รายการลิงก์: เพิ่มหน้าใหม่ได้ด้วยการเพิ่มหนึ่งบรรทัดในรายการนี้
+const LINKS = [
+  { href: 'pos.html',          title: 'หน้าขายยา',        desc: 'เลือกยา กรอกจำนวน บันทึกการจ่ายยา' },
+  { href: 'admin.html',        title: 'จัดการระบบ (ผู้ดูแล)', desc: 'บัญชียา คลังรายล็อต รายการจ่าย ต้องใช้รหัสผู้ดูแล' },
+  { href: 'dashboard-v2.html', title: 'Dashboard คลังยา', desc: 'ภาพรวมคลัง ล็อตใกล้หมดอายุ ยาต่ำกว่าจุดสั่งซื้อ' },
+  { href: 'bmi-b.html',        title: 'แอป BMI',          desc: 'คำนวณดัชนีมวลกายตามเกณฑ์สำหรับคนเอเชีย' },
+  { href: 'status.html',       title: 'ตรวจสถานะระบบ',    desc: 'ตรวจว่าการเชื่อมต่อแต่ละส่วนทำงานปกติ' },
+];
+const ul = document.getElementById('links');
+for (const l of LINKS) {
+  const li = document.createElement('li'), a = document.createElement('a');
+  a.className = 'link'; a.href = l.href;
+  const t = document.createElement('div'); t.className = 't'; t.textContent = l.title;
+  const d = document.createElement('div'); d.className = 'd'; d.textContent = l.desc;
+  a.append(t, d); li.appendChild(a); ul.appendChild(li);
+}
+</script>
+</body>
+</html>
